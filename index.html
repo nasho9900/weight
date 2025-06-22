@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Weight Tracker</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            margin: 0;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 32px;
+            padding: 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #10b981;
+            transition: all 0.5s ease;
+            border-radius: 32px 32px 0 0;
+        }
+        
+        .status-indicator.over {
+            background: #ef4444;
+        }
+        
+        .status-indicator.under {
+            background: #3b82f6;
+        }
+        
+        .title {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: #888;
+            margin-bottom: 2rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .current-weight {
+            font-size: 5rem;
+            font-weight: 200;
+            margin: 2rem 0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .weight-status {
+            color: #10b981;
+        }
+        
+        .weight-status.over {
+            color: #ef4444;
+        }
+        
+        .weight-status.under {
+            color: #3b82f6;
+        }
+        
+        .unit {
+            font-size: 1.5rem;
+            color: #666;
+            margin-left: 0.5rem;
+        }
+        
+        .target-info {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .target-label {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            font-weight: 300;
+        }
+        
+        .target-weight {
+            font-size: 2rem;
+            font-weight: 400;
+            color: #ccc;
+        }
+        
+        .week-dates {
+            color: #666;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        
+        .input-section {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .weight-input, .update-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            color: #ffffff;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .weight-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        
+        .update-btn {
+            padding: 1rem 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .update-btn:hover, .update-btn:active {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Mejorar interacción táctil */
+        .update-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .milestone:active, .level-item:active {
+            transform: scale(0.98);
+        }
+        
+        /* Evitar zoom en inputs en iOS */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            .weight-input {
+                font-size: 16px;
+            }
+        }
+        
+        .status-text {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #10b981;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .status-text.over {
+            color: #ef4444;
+        }
+        
+        .status-text.under {
+            color: #3b82f6;
+        }
+        
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .dot.active {
+            background: #10b981;
+        }
+        
+        .dot.over {
+            background: #ef4444;
+        }
+        
+        .dot.under {
+            background: #3b82f6;
+        }
+        
+        .video-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .video-title {
+            font-size: 1.2rem;
+            font-weight: 400;
+            color: #ccc;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.3px;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: none;
+        }
+        
+        .video-container.active {
+            display: block;
+        }
+        
+        .video-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 16px;
+        }
+        
+        .video-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            color: #666;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        .clear-video {
+            margin-top: 1rem;
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .clear-video:hover {
+            color: #999;
+        }
+        
+        .evolution-section {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .evolution-title {
+            font-size: 1.2rem;
+            font-weight: 400;
+            color: #ccc;
+            margin-bottom: 2rem;
+            letter-spacing: 0.3px;
+        }
+        
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #10b981, #059669);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .level-badge.warrior {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        
+        .level-badge.champion {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+        
+        .level-badge.legend {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .level-badge.master {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            height: 300px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .chart-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+        }
+        
+        .chart-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .chart-content {
+            position: relative;
+            height: 100%;
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            padding: 1rem 0;
+        }
+        
+        .week-bar {
+            flex: 1;
+            margin: 0 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        .bar {
+            width: 100%;
+            background: linear-gradient(to top, #10b981, #34d399);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: all 0.5s ease;
+            min-height: 20px;
+        }
+        
+        .bar.current {
+            background: linear-gradient(to top, #3b82f6, #60a5fa);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .bar.future {
+            background: linear-gradient(to top, rgba(255,255,255,0.1), rgba(255,255,255,0.2));
+            border: 1px dashed rgba(255,255,255,0.2);
+        }
+        
+        .week-label {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+        
+        .weight-label {
+            position: absolute;
+            top: -1.5rem;
+            font-size: 0.7rem;
+            color: #ccc;
+            font-weight: 500;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .milestones {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .milestone {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .milestone:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .milestone-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .milestone-title {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-bottom: 0.5rem;
+        }
+        
+        .milestone-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #10b981;
+        }
+        
+        .milestone-value.warning {
+            color: #f59e0b;
+        }
+        
+        .next-levels {
+            margin-top: 2rem;
+            text-align: left;
+        }
+        
+        .next-levels h4 {
+            font-size: 1rem;
+            color: #ccc;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .level-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .level-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .level-item.achieved {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .level-info {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .level-icon {
+            font-size: 1.2rem;
+        }
+        
+        .level-name {
+            font-weight: 500;
+            color: #ccc;
+        }
+        
+        .level-range {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .level-status {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccc;
+        }
+        
+        .level-status.achieved {
+            background: #10b981;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .container {
+                padding: 2rem 1.5rem;
+                margin: 0;
+                max-width: 100%;
+                border-radius: 24px;
+            }
+            
+            .title {
+                font-size: 2.5rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .current-weight {
+                font-size: 3.5rem;
+                margin: 1.5rem 0;
+            }
+            
+            .target-info {
+                padding: 1.2rem;
+                margin: 1.5rem 0;
+            }
+            
+            .target-weight {
+                font-size: 1.8rem;
+            }
+            
+            .input-section {
+                flex-direction: column;
+                gap: 1rem;
+                margin-top: 1.5rem;
+            }
+            
+            .weight-input, .update-btn {
+                width: 100%;
+                padding: 1.2rem;
+                font-size: 1.1rem;
+            }
+            
+            .evolution-section {
+                margin-top: 2rem;
+                padding-top: 1.5rem;
+            }
+            
+            .evolution-title {
+                font-size: 1.1rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .level-badge {
+                font-size: 0.85rem;
+                padding: 0.4rem 0.8rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .chart-container {
+                height: 250px;
+                padding: 1.5rem 1rem;
+                margin: 1.5rem 0;
+            }
+            
+            .week-bar {
+                margin: 0 1px;
+            }
+            
+            .weight-label {
+                font-size: 0.6rem;
+                top: -1.2rem;
+            }
+            
+            .week-label {
+                font-size: 0.6rem;
+                margin-top: 0.3rem;
+            }
+            
+            .milestones {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.8rem;
+                margin-top: 1.5rem;
+            }
+            
+            .milestone {
+                padding: 1.2rem;
+            }
+            
+            .milestone-icon {
+                font-size: 1.5rem;
+                margin-bottom: 0.4rem;
+            }
+            
+            .milestone-title {
+                font-size: 0.8rem;
+            }
+            
+            .milestone-value {
+                font-size: 1.3rem;
+            }
+            
+            .next-levels h4 {
+                font-size: 0.9rem;
+                margin-bottom: 0.8rem;
+            }
+            
+            .level-item {
+                padding: 0.8rem;
+                margin-bottom: 0.4rem;
+            }
+            
+            .level-icon {
+                font-size: 1rem;
+            }
+            
+            .level-name {
+                font-size: 0.9rem;
+            }
+            
+            .level-range {
+                font-size: 0.7rem;
+            }
+            
+            .level-status {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.6rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.5rem 1rem;
+                border-radius: 20px;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            .current-weight {
+                font-size: 3rem;
+            }
+            
+            .unit {
+                font-size: 1.2rem;
+            }
+            
+            .target-weight {
+                font-size: 1.5rem;
+            }
+            
+            .chart-container {
+                height: 200px;
+                padding: 1rem;
+            }
+            
+            .milestones {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+            
+            .milestone {
+                padding: 1rem;
+            }
+            
+            .level-item {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+            
+            .level-info {
+                flex-direction: column;
+                gap: 0.3rem;
+            }
+            
+            .weight-label {
+                font-size: 0.55rem;
+            }
+            
+            .week-label {
+                font-size: 0.55rem;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .container {
+                padding: 1rem 0.8rem;
+            }
+            
+            .title {
+                font-size: 1.8rem;
+            }
+            
+            .current-weight {
+                font-size: 2.5rem;
+            }
+            
+            .chart-container {
+                height: 180px;
+                padding: 0.8rem;
+            }
+            
+            .evolution-title {
+                font-size: 1rem;
+            }
+            
+            .level-badge {
+                font-size: 0.8rem;
+                padding: 0.3rem 0.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status-indicator" id="statusIndicator"></div>
+        
+        <h1 class="title">Weight Tracker</h1>
+        
+        <div class="current-weight weight-status" id="weightDisplay">
+            <span id="currentWeight">93.0</span>
+            <span class="unit">kg</span>
+        </div>
+        
+        <div class="target-info">
+            <div class="target-label">Objetivo esta semana</div>
+            <div class="target-weight" id="targetWeight">93.0 kg</div>
+            <div class="week-dates" id="weekDates">Hoy: domingo | Mañana: nueva semana</div>
+        </div>
+        
+        <div class="status-text" id="statusText">En el peso objetivo ✓</div>
+        
+        <div class="progress-dots" id="progressDots"></div>
+        
+        <div class="input-section">
+            <input type="number" class="weight-input" id="weightInput" placeholder="Ingresa tu peso" step="0.1">
+            <button class="update-btn" onclick="updateWeight()">Actualizar</button>
+        </div>
+        
+        <div class="evolution-section">
+            <h3 class="evolution-title">Evolución & Gamificación</h3>
+            
+            <div class="level-badge" id="currentLevelBadge">
+                <span>🎯</span>
+                <span id="currentLevelText">Iniciado - Fase de Arranque</span>
+            </div>
+            
+            <div class="chart-container">
+                <div class="chart-grid">
+                    <div class="chart-line" style="top: 20%;"></div>
+                    <div class="chart-line" style="top: 40%;"></div>
+                    <div class="chart-line" style="top: 60%;"></div>
+                    <div class="chart-line" style="top: 80%;"></div>
+                </div>
+                
+                <div class="chart-content" id="chartContent">
+                    <!-- Las barras se generan dinámicamente -->
+                </div>
+            </div>
+            
+            <div class="milestones">
+                <div class="milestone">
+                    <div class="milestone-icon">📅</div>
+                    <div class="milestone-title">Semanas Restantes</div>
+                    <div class="milestone-value" id="weeksRemaining">15</div>
+                </div>
+                
+                <div class="milestone">
+                    <div class="milestone-icon">🎯</div>
+                    <div class="milestone-title">Peso Objetivo</div>
+                    <div class="milestone-value">78 kg</div>
+                </div>
+                
+                <div class="milestone">
+                    <div class="milestone-icon">📈</div>
+                    <div class="milestone-title">Progreso Total</div>
+                    <div class="milestone-value" id="totalProgress">0%</div>
+                </div>
+                
+                <div class="milestone">
+                    <div class="milestone-icon">⚡</div>
+                    <div class="milestone-title">Racha Actual</div>
+                    <div class="milestone-value warning" id="currentStreak">1 sem</div>
+                </div>
+            </div>
+            
+            <div class="next-levels">
+                <h4>🏆 Niveles de Peso</h4>
+                <div id="levelsList">
+                    <!-- Los niveles se generan dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración inicial con localStorage
+        const STORAGE_KEY = 'weightTracker';
+        const TARGET_WEIGHT = 78;
+        const START_DATE = '2025-06-22'; // Domingo de inicio del programa
+        
+        // Cargar datos guardados o usar defaults
+        function loadData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            return {
+                startWeight: 93,
+                currentWeight: 93,
+                weeklyWeights: { 0: 93 }, // peso por semana
+                startDate: START_DATE
+            };
+        }
+        
+        // Guardar datos
+        function saveData(data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+        
+        let userData = loadData();
+        let currentWeight = userData.currentWeight;
+        const weeklyTargets = {
+            0: 93,  // Esta semana (hasta domingo)
+            1: 92,  // A partir del lunes
+            2: 91,  // Semana siguiente
+            3: 90   // Y así sucesivamente...
+        };
+        
+        // Definir niveles de gamificación
+        const weightLevels = [
+            { name: "Iniciado", icon: "🎯", range: "93-90kg", minWeight: 90, maxWeight: 93, color: "green" },
+            { name: "Guerrero", icon: "⚔️", range: "89-87kg", minWeight: 87, maxWeight: 89, color: "warrior" },
+            { name: "Campeón", icon: "🏆", range: "86-83kg", minWeight: 83, maxWeight: 86, color: "champion" },
+            { name: "Leyenda", icon: "👑", range: "82-79kg", minWeight: 79, maxWeight: 82, color: "legend" },
+            { name: "Maestro", icon: "💎", range: "78kg", minWeight: 78, maxWeight: 78, color: "master" }
+        ];
+        
+        // Generar todas las semanas hasta llegar a 78kg
+        function generateWeeklyTargets() {
+            const targets = {};
+            let week = 0;
+            let weight = userData.startWeight;
+            
+            while (weight >= TARGET_WEIGHT) {
+                targets[week] = weight;
+                week++;
+                weight = Math.max(weight - 1, TARGET_WEIGHT);
+            }
+            
+            return targets;
+        }
+        
+        function getCurrentWeek() {
+            const today = new Date();
+            const startDate = new Date(userData.startDate);
+            
+            // Calcular días transcurridos desde el inicio
+            const daysDiff = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+            
+            // Calcular semana actual (cada semana empieza en lunes)
+            const currentWeek = Math.floor(daysDiff / 7);
+            
+            return Math.max(0, currentWeek);
+        }
+        
+        function getWeekTarget(weekNumber) {
+            return Math.max(TARGET_WEIGHT, userData.startWeight - weekNumber);
+        }
+        
+        function getWeekDates() {
+            const today = new Date();
+            const currentDay = today.getDay(); // 0 = domingo, 1 = lunes, etc.
+            const currentWeek = getCurrentWeek();
+            const nextWeekTarget = getWeekTarget(currentWeek + 1);
+            
+            // Calcular el lunes de la semana actual
+            let daysFromMonday;
+            if (currentDay === 0) {
+                daysFromMonday = 6; // domingo está a 6 días del lunes
+            } else {
+                daysFromMonday = currentDay - 1;
+            }
+            
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - daysFromMonday);
+            
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            
+            const dayNames = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+            const currentDayName = dayNames[currentDay];
+            
+            if (currentDay === 0) {
+                return `Hoy: ${currentDayName} | Mañana: nueva semana (${nextWeekTarget}kg)`;
+            } else {
+                const startStr = weekStart.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+                const endStr = weekEnd.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+                return `${startStr} - ${endStr} | Hoy: ${currentDayName}`;
+            }
+        }
+        
+        function updateDisplay() {
+            const currentWeek = getCurrentWeek();
+            const targetWeight = getWeekTarget(currentWeek);
+            const dates = getWeekDates();
+            
+            // Actualizar objetivo y fechas
+            document.getElementById('targetWeight').textContent = `${targetWeight}.0 kg`;
+            document.getElementById('weekDates').textContent = dates;
+            
+            // Determinar estado
+            let status = 'on-target';
+            let statusText = 'En el peso objetivo ✓';
+            
+            if (currentWeight > targetWeight) {
+                status = 'over';
+                const diff = (currentWeight - targetWeight).toFixed(1);
+                statusText = `+${diff} kg sobre el objetivo`;
+            } else if (currentWeight < targetWeight) {
+                status = 'under';
+                const diff = (targetWeight - currentWeight).toFixed(1);
+                statusText = `−${diff} kg bajo el objetivo`;
+            }
+            
+            // Actualizar elementos visuales
+            const elements = ['statusIndicator', 'weightDisplay', 'statusText'];
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.className = element.className.replace(/\b(over|under|on-target)\b/g, '');
+                    if (status !== 'on-target') {
+                        element.classList.add(status);
+                    }
+                }
+            });
+            
+            // Actualizar peso actual
+            document.getElementById('currentWeight').textContent = currentWeight.toFixed(1);
+            document.getElementById('statusText').textContent = statusText;
+            
+            // Actualizar dots de progreso
+            updateProgressDots(status);
+            
+            // Actualizar sección de evolución
+            updateEvolutionSection();
+        }
+        
+        function updateProgressDots(status) {
+            const container = document.getElementById('progressDots');
+            const today = new Date();
+            const currentDay = today.getDay(); // 0 = domingo, 1 = lunes, etc.
+            
+            // Calcular cuántos días han pasado en la semana actual
+            let daysPassedInWeek;
+            if (currentDay === 0) {
+                // Si es domingo, han pasado 7 días (toda la semana)
+                daysPassedInWeek = 7;
+            } else {
+                // Cualquier otro día: lunes = 1, martes = 2, etc.
+                daysPassedInWeek = currentDay;
+            }
+            
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 7; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                
+                if (i < daysPassedInWeek) {
+                    dot.classList.add('active');
+                    if (status === 'over') dot.classList.add('over');
+                    if (status === 'under') dot.classList.add('under');
+                }
+                
+                container.appendChild(dot);
+            }
+        }
+        
+        function updateWeight() {
+            const input = document.getElementById('weightInput');
+            const newWeight = parseFloat(input.value);
+            
+            if (newWeight && newWeight > 0 && newWeight < 200) {
+                currentWeight = newWeight;
+                userData.currentWeight = newWeight;
+                
+                // Guardar peso de esta semana
+                const currentWeek = getCurrentWeek();
+                userData.weeklyWeights[currentWeek] = newWeight;
+                
+                // Guardar en localStorage
+                saveData(userData);
+                
+                updateDisplay();
+                input.value = '';
+                
+                // Animación sutil
+                const weightDisplay = document.getElementById('weightDisplay');
+                if (weightDisplay) {
+                    weightDisplay.style.transform = 'scale(1.02)';
+                    setTimeout(() => {
+                        weightDisplay.style.transform = 'scale(1)';
+                    }, 200);
+                }
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('weightInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updateWeight();
+            }
+        });
+        
+        function getCurrentLevel(weight) {
+            for (let level of weightLevels) {
+                if (weight >= level.minWeight && weight <= level.maxWeight) {
+                    return level;
+                }
+            }
+            return weightLevels[0]; // Por defecto
+        }
+        
+        function updateEvolutionSection() {
+            // Actualizar badge de nivel actual
+            const currentLevel = getCurrentLevel(currentWeight);
+            const badge = document.getElementById('currentLevelBadge');
+            const levelText = document.getElementById('currentLevelText');
+            
+            badge.className = `level-badge ${currentLevel.color}`;
+            levelText.textContent = `${currentLevel.name} - ${currentLevel.range}`;
+            
+            // Actualizar gráfico
+            updateChart();
+            
+            // Actualizar métricas
+            updateMetrics();
+            
+            // Actualizar lista de niveles
+            updateLevelsList();
+        }
+        
+        function updateChart() {
+            const chartContent = document.getElementById('chartContent');
+            if (!chartContent) return;
+            
+            chartContent.innerHTML = '';
+            
+            const currentWeek = getCurrentWeek();
+            const totalWeeks = 15; // Mostrar 15 semanas
+            const maxWeight = userData.startWeight;
+            const minWeight = TARGET_WEIGHT;
+            
+            for (let i = 0; i < totalWeeks; i++) {
+                const weekWeight = getWeekTarget(i);
+                const isCurrentWeek = i === currentWeek;
+                const isPastWeek = i < currentWeek;
+                const isFutureWeek = i > currentWeek;
+                
+                const weekBar = document.createElement('div');
+                weekBar.className = 'week-bar';
+                
+                const barHeight = ((weekWeight - minWeight) / (maxWeight - minWeight)) * 200 + 20;
+                
+                const bar = document.createElement('div');
+                bar.className = `bar ${isCurrentWeek ? 'current' : isPastWeek ? 'completed' : 'future'}`;
+                bar.style.height = `${barHeight}px`;
+                
+                const weightLabel = document.createElement('div');
+                weightLabel.className = 'weight-label';
+                weightLabel.textContent = `${weekWeight}kg`;
+                
+                const weekLabel = document.createElement('div');
+                weekLabel.className = 'week-label';
+                weekLabel.textContent = `S${i + 1}`;
+                
+                bar.appendChild(weightLabel);
+                weekBar.appendChild(bar);
+                weekBar.appendChild(weekLabel);
+                chartContent.appendChild(weekBar);
+            }
+        }
+        
+        function updateMetrics() {
+            const currentWeek = getCurrentWeek();
+            const totalWeeksNeeded = userData.startWeight - TARGET_WEIGHT; // 15 semanas
+            const weeksRemaining = Math.max(totalWeeksNeeded - currentWeek, 0);
+            
+            const totalProgress = ((userData.startWeight - currentWeight) / (userData.startWeight - TARGET_WEIGHT)) * 100;
+            
+            // Información de debug
+            const debugInfo = `Semana ${currentWeek + 1}`;
+            
+            const weeksEl = document.getElementById('weeksRemaining');
+            const progressEl = document.getElementById('totalProgress');
+            const streakEl = document.getElementById('currentStreak');
+            
+            if (weeksEl) weeksEl.textContent = weeksRemaining;
+            if (progressEl) progressEl.textContent = `${Math.round(Math.max(0, totalProgress))}%`;
+            if (streakEl) streakEl.textContent = debugInfo;
+        }
+        
+        function updateLevelsList() {
+            const levelsList = document.getElementById('levelsList');
+            levelsList.innerHTML = '';
+            
+            weightLevels.forEach(level => {
+                const isAchieved = currentWeight <= level.maxWeight;
+                
+                const levelItem = document.createElement('div');
+                levelItem.className = `level-item ${isAchieved ? 'achieved' : ''}`;
+                
+                levelItem.innerHTML = `
+                    <div class="level-info">
+                        <span class="level-icon">${level.icon}</span>
+                        <div>
+                            <div class="level-name">${level.name}</div>
+                            <div class="level-range">${level.range}</div>
+                        </div>
+                    </div>
+                    <div class="level-status ${isAchieved ? 'achieved' : ''}">
+                        ${isAchieved ? '✓ Desbloqueado' : 'Bloqueado'}
+                    </div>
+                `;
+                
+                levelsList.appendChild(levelItem);
+            });
+        }
+        
+        // Inicializar y actualizar cada minuto para detectar cambios de día
+        updateDisplay();
+        setInterval(updateDisplay, 60000);
+        
+        // Mostrar información de debug en consola
+        console.log('=== WEIGHT TRACKER DEBUG ===');
+        console.log('Fecha actual:', new Date().toLocaleString('es-ES'));
+        console.log('Día de la semana:', new Date().getDay(), '(0=domingo, 1=lunes, etc.)');
+        console.log('Semana actual:', getCurrentWeek());
+        console.log('Datos guardados:', userData);
+        console.log('Objetivo actual:', getWeekTarget(getCurrentWeek()) + 'kg');
+        
+        // Verificar si localStorage funciona
+        try {
+            localStorage.setItem('test', 'test');
+            localStorage.removeItem('test');
+            console.log('✅ localStorage funciona correctamente');
+        } catch (e) {
+            console.log('❌ localStorage no disponible:', e);
+        }
+    </script>
+</body>
+</html>
